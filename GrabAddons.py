@@ -12,27 +12,27 @@ import os, urllib.request, bpy
 addons = []
 
 addon = {
-    'addon_name':'',
+    'name':'',
     'url':'',
     }
     
 addon1 = addon.copy()
-addon1['addon_name'] = 'jbake-tools-main'
+addon1['name'] = 'jbake-tools-main'
 addon1['url'] = 'https://github.com/jayanam/jbake-tools/archive/refs/heads/main.zip'
 addons.append(addon1)
 
 addon2 = addon.copy()
-addon2['addon_name'] = 'BY-GEN-public-master'
+addon2['name'] = 'BY-GEN-public-master'
 addon2['url'] = 'https://github.com/curtisjamesholt/BY-GEN-public/archive/refs/heads/master.zip'
 addons.append(addon2)
 
 addon3 = addon.copy()
-addon3['addon_name'] = 'TexTools_1_4_4'
+addon3['name'] = 'TexTools_1_4_4'
 addon3['url'] = 'https://github.com/SavMartin/TexTools-Blender/releases/download/v1.4.4/TexTools_1_4_4.zip'
 addons.append(addon3)
 
 addon4 = addon.copy()
-addon4['addon_name'] = 'modifier_stack_manager'
+addon4['name'] = 'modifier_stack_manager'
 addon4['url'] = 'https://github.com/salaivv/modifier-stack-manager/releases/download/0.2/modifier_stack_manager.zip'
 addons.append(addon4)
 
@@ -49,4 +49,4 @@ for addon in addons:
     try:
         bpy.ops.preferences.addon_enable(module=module_name)
     except: # ModuleNotFoundError
-        bpy.ops.preferences.addon_enable(module=addon['addon_name'])
+        bpy.ops.preferences.addon_enable(module=addon['name'])
