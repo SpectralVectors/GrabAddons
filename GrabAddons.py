@@ -1,52 +1,141 @@
-# https://github.com/salaivv/modifier-stack-manager/releases/download/0.2/modifier_stack_manager.zip
-# https://github.com/BlenderCN/add_mesh_SpaceshipGenerator/archive/refs/heads/master.zip
-# https://github.com/Jim-Kroovy/Mr-Mannequins-Tools/releases/download/v1.4/MrMannequinsTools-1.4.zip
-# https://github.com/xavier150/Blender-For-UnrealEngine-Addons/releases/download/v0.2.8/blender-for-unrealengine.zip
-# https://github.com/jayanam/jbake-tools/archive/refs/heads/main.zip
-# https://github.com/curtisjamesholt/BY-GEN-public/archive/refs/heads/master.zip
-# https://github.com/nutti/Screencast-Keys/releases/download/v3.5/screencast_keys.zip
-# https://github.com/SavMartin/TexTools-Blender/releases/download/v1.4.4/TexTools_1_4_4.zip
+bl_info = {
+    "name": "Grab Addons",
+    "author": "Spectral Vectors",
+    "version": (0, 0, 3),
+    "blender": (2, 90, 0),
+    "location": "Preferences > Addons > GrabAddons",
+    "description": "Download, install and activate community addons inside Blender",
+    "warning": "",
+    "doc_url": "",
+    "category": "Addons",
+}
 
-import os, urllib.request, bpy
-
-addons = []
+import bpy, os, urllib.request
 
 addon = {
-    'name':'',
+    'label':'',
+    'module_name':'',
     'url':'',
     }
+
+community_addons = []
+
+jbaketools = addon.copy()
+jbaketools['label'] = 'JBake Tools by Jayanam'
+jbaketools['module_name'] = 'jbake-tools-main'
+jbaketools['url'] = 'https://github.com/jayanam/jbake-tools/archive/refs/heads/main.zip'
+community_addons.append(jbaketools)
+
+bygen = addon.copy()
+bygen['label'] = 'BY-GEN by Curtis Holt'
+bygen['module_name'] = 'BY-GEN-public-master'
+bygen['url'] = 'https://github.com/curtisjamesholt/BY-GEN-public/archive/refs/heads/master.zip'
+community_addons.append(bygen)
+
+addons = community_addons
+
+class GrabAddons(bpy.types.Operator):
+    bl_idname = "preferences.grab_addons"
+    bl_label = "Grab Addons"
+    bl_space_type = 'PREFERENCES'
+    bl_description = 'Download, install and activate community addons'
+
+    def execute(self,context):
+        preferences = context.preferences
+        addon_prefs = preferences.addons[__name__].preferences
+
+        for addon in addons:
+            
+            url_file = bpy.path.basename(addon['url'])
+            module_name = bpy.path.display_name_from_filepath(addon['url'])
+            filepath = str(os.path.expanduser('~/Downloads/') + url_file)
+            
+            urllib.request.urlretrieve(addon['url'], filepath)
+
+            bpy.ops.preferences.addon_install(overwrite=addon_prefs.overwrite_setting, filepath=filepath)
+
+            try:
+                bpy.ops.preferences.addon_enable(module=module_name)
+            except: # ModuleNotFoundError
+                bpy.ops.preferences.addon_enable(module=addon['module_name'])
+        return{'FINISHED'}
+
+class GrabAddon(bpy.types.Operator):
+    bl_idname = "preferences.grab_addon"
+    bl_label = "Grab Addon"
+    bl_space_type = 'PREFERENCES'
+    bl_description = 'Download, install and activate chosen addon'
+
+    def execute(self,context):
+        preferences = context.preferences
+        addon_prefs = preferences.addons[__name__].preferences
+
+        addon = addon_prefs.addon
+            
+        url_file = bpy.path.basename(addon['url'])
+        module_name = bpy.path.display_name_from_filepath(addon['url'])
+        filepath = str(os.path.expanduser('~/Downloads/') + url_file)
+        
+        urllib.request.urlretrieve(addon['url'], filepath)
+
+        bpy.ops.preferences.addon_install(overwrite=addon_prefs.overwrite_setting, filepath=filepath)
+
+        try:
+            bpy.ops.preferences.addon_enable(module=module_name)
+        except: # ModuleNotFoundError
+            bpy.ops.preferences.addon_enable(module=addon['module_name'])
+        return{'FINISHED'}
+
+class GrabAddonsPreferences(bpy.types.AddonPreferences):
+    bl_idname = __name__
+
+    addon = {
+    'label':'',
+    'module_name':'',
+    'url':'',
+    }
+
+    overwrite_setting : bpy.props.BoolProperty(
+        name='Overwrite',
+        default=True,
+    )
+
+    def getaddonsinfo(scene,context):
+        return {(addon,addon['label'],addon['url']) for addon in addons}
+
+    addonslist : bpy.props.EnumProperty(
+        items=getaddonsinfo,
+        name='Addons',
+    )
+
+
+    def draw(self,context):
+        layout = self.layout
+
+        layout.prop(self,'addonslist')
+        row = layout.row()       
+        row.label(text='Overwrite Existing Addons?')
+        row.prop(self, 'overwrite_setting')
+        row.operator('preferences.grab_addon', text='Grab Addon')
+        row.operator('preferences.grab_addons', text='Grab Addons')
+        
+
+classes = [
+    GrabAddonsPreferences,
+    GrabAddons,
+    GrabAddon,
+]
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
     
-addon1 = addon.copy()
-addon1['name'] = 'jbake-tools-main'
-addon1['url'] = 'https://github.com/jayanam/jbake-tools/archive/refs/heads/main.zip'
-addons.append(addon1)
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
 
-addon2 = addon.copy()
-addon2['name'] = 'BY-GEN-public-master'
-addon2['url'] = 'https://github.com/curtisjamesholt/BY-GEN-public/archive/refs/heads/master.zip'
-addons.append(addon2)
+if __name__ == "__main__":
+    register()
 
-addon3 = addon.copy()
-addon3['name'] = 'TexTools_1_4_4'
-addon3['url'] = 'https://github.com/SavMartin/TexTools-Blender/releases/download/v1.4.4/TexTools_1_4_4.zip'
-addons.append(addon3)
-
-addon4 = addon.copy()
-addon4['name'] = 'modifier_stack_manager'
-addon4['url'] = 'https://github.com/salaivv/modifier-stack-manager/releases/download/0.2/modifier_stack_manager.zip'
-addons.append(addon4)
-
-for addon in addons:
-    
-    url_file = bpy.path.basename(addon['url'])
-    module_name = bpy.path.display_name_from_filepath(addon['url'])
-    filepath = str(os.path.expanduser('~/Downloads/') + url_file)
-    file = urllib.request.urlretrieve(addon['url'], filepath)
-
-    overwrite_setting = True
-    bpy.ops.preferences.addon_install(overwrite=overwrite_setting, filepath=filepath)
-
-    try:
-        bpy.ops.preferences.addon_enable(module=module_name)
-    except: # ModuleNotFoundError
-        bpy.ops.preferences.addon_enable(module=addon['name'])
+#bpy.ops.preferences.grab_addons()
